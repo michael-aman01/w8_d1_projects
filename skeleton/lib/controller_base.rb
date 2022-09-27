@@ -21,6 +21,10 @@ class ControllerBase
 
   # Set the response status code and header
   def redirect_to(url)
+    raise 'double render error' if @already_built_response == true
+    @res.status = 302
+    @res['Location'] = url
+    @already_built_response = true
   end
 
   # Populate the response with content.
@@ -29,13 +33,16 @@ class ControllerBase
   def render_content(content, content_type)
     raise 'double render error' if @already_built_response == true
     @res['Content-Type'] = content_type
-    @res['body'] = content
+    @res.write(content)
+    @res.finish
     @already_built_response = true
   end
 
   # use ERB and binding to evaluate templates
   # pass the rendered html to render_content
   def render(template_name)
+    controller_name = File.dirname(__FILE__)
+    File.read("views/#{controller_name}/#{template_name}")
   end
 
   # method exposing a `Session` object
@@ -46,4 +53,5 @@ class ControllerBase
   def invoke_action(name)
   end
 end
+
 
